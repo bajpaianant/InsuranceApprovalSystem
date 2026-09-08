@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Queue</p>
+    <h1>Claims desk</h1>
+    <p class="lede">Engine scores coverage, documentation, and fraud probability from files in the local repository.</p>
+  </div>
+  <a class="primary" href="/claims/new">New claim</a>
+</header>
+
+<section class="stats">
+  <article>
+    <span>Open</span>
+    <strong>{{ stats.pending }}</strong>
+  </article>
+  <article>
+    <span>Approved</span>
+    <strong>{{ stats.approved }}</strong>
+  </article>
+  <article>
+    <span>Denied</span>
+    <strong>{{ stats.denied }}</strong>
+  </article>
+  <article class="{% if stats.high_risk %}alert{% endif %}">
+    <span>High fraud risk</span>
+    <strong>{{ stats.high_risk }}</strong>
+  </article>
+  <article>
+    <span>Mean fraud probability</span>
+    <strong>{{ stats.avg_fraud }}%</strong>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Recent claims</h2>
+    <a href="/claims">View all</a>
+  </div>
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>Claim</th>
+        <th>Patient</th>
+        <th>Amount</th>
+        <th>Fraud</th>
+        <th>Decision</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in claims %}
+      <tr>
+        <td><a href="/claims/{{ c.id }}">{{ c.public_id }}</a></td>
+        <td>{{ c.full_name }}</td>
+        <td>${{ '%.2f'|format(c.amount) }}</td>
+        <td>
+          <span class="meter" data-level="{% if c.fraud_probability >= 0.55 %}high{% elif c.fraud_probability >= 0.4 %}mid{% else %}low{% endif %}">
+            {{ pct(c.fraud_probability) }}
+          </span>
+        </td>
+        <td>{{ c.recommendation.replace('_', ' ') }}</td>
+        <td><span class="pill {{ c.status|lower }}">{{ c.status.replace('_', ' ') }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No claims yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<p class="foot-note">Document repository: <code>{{ repository }}</code></p>
+{% endblock %}

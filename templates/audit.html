@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Audit{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Accountability</p>
+    <h1>Audit log</h1>
+    <p class="lede">Every sign-in, claim decision, and document download is recorded locally.</p>
+  </div>
+</header>
+<section class="panel">
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Who</th>
+        <th>Action</th>
+        <th>Entity</th>
+        <th>Detail</th>
+        <th>IP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td>{{ e.created_at.replace('T', ' ') }}</td>
+        <td>{{ e.display_name or 'system' }}</td>
+        <td>{{ e.action }}</td>
+        <td>{{ e.entity }} {{ e.entity_id or '' }}</td>
+        <td>{{ e.detail }}</td>
+        <td>{{ e.ip }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

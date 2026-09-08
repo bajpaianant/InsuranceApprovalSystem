@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Claims{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Worklist</p>
+    <h1>All claims</h1>
+  </div>
+  <a class="primary" href="/claims/new">New claim</a>
+</header>
+
+<section class="panel">
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>Claim</th>
+        <th>Patient</th>
+        <th>Service date</th>
+        <th>Procedure</th>
+        <th>Amount</th>
+        <th>Fraud</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in claims %}
+      <tr>
+        <td><a href="/claims/{{ c.id }}">{{ c.public_id }}</a></td>
+        <td>{{ c.full_name }}<div class="muted">{{ mask_id(c.member_id) }}</div></td>
+        <td>{{ c.date_of_service }}</td>
+        <td>{{ c.procedure_code }}</td>
+        <td>${{ '%.2f'|format(c.amount) }}</td>
+        <td>
+          <span class="meter" data-level="{% if c.fraud_probability >= 0.55 %}high{% elif c.fraud_probability >= 0.4 %}mid{% else %}low{% endif %}">
+            {{ pct(c.fraud_probability) }}
+          </span>
+        </td>
+        <td><span class="pill {{ c.status|lower }}">{{ c.status.replace('_', ' ') }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7">No claims in the worklist.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

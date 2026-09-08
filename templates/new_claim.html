@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}New claim{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Intake</p>
+    <h1>Submit a claim</h1>
+    <p class="lede">Files are written to the local encrypted repository and scored immediately for coverage, completeness, and fraud.</p>
+  </div>
+</header>
+
+{% if error %}
+<p class="banner bad">{{ error }}</p>
+{% endif %}
+
+<form method="post" action="/claims/new" enctype="multipart/form-data" class="panel stack form-grid">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+
+  {% if user.role == 'reviewer' %}
+  <label>Patient
+    <select name="patient_id" required>
+      <option value="">Select…</option>
+      {% for p in patients %}
+      <option value="{{ p.id }}">{{ p.full_name }} · {{ mask_id(p.member_id) }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% else %}
+  <p class="notes">Filing as {{ patient.full_name }} · member {{ mask_id(patient.member_id) }}</p>
+  {% endif %}
+
+  <label>Provider name
+    <input name="provider_name" required>
+  </label>
+  <label>Provider NPI
+    <input name="provider_npi" required placeholder="10-digit NPI">
+  </label>
+  <label>Facility
+    <input name="facility">
+  </label>
+  <label>Date of service
+    <input name="date_of_service" type="date" required>
+  </label>
+  <label>Diagnosis (ICD-10)
+    <input name="diagnosis_code" required placeholder="e.g. J06.9">
+  </label>
+  <label>Procedure (CPT)
+    <input name="procedure_code" required placeholder="e.g. 99213">
+  </label>
+  <label>Claim amount (USD)
+    <input name="amount" type="number" step="0.01" min="0" required>
+  </label>
+  <label>Place of service
+    <select name="place_of_service">
+      <option value="office">Office</option>
+      <option value="outpatient_hospital">Outpatient hospital</option>
+      <option value="inpatient_hospital">Inpatient hospital</option>
+      <option value="emergency_room">Emergency room</option>
+      <option value="imaging_center">Imaging center</option>
+      <option value="lab">Laboratory</option>
+    </select>
+  </label>
+  <label>Emergency
+    <select name="is_emergency">
+      <option value="0">No</option>
+      <option value="1">Yes</option>
+    </select>
+  </label>
+  <label>Prior authorization number
+    <input name="preauth_number">
+  </label>
+  <label class="full">Clinical notes
+    <textarea name="notes" rows="3" placeholder="Reason for the visit, conservative care tried, etc."></textarea>
+  </label>
+  <label class="full">Documents
+    <input name="files" type="file" multiple>
+    <small>Allowed: {{ allowed }}. Max 10 MB each. Stored encrypted under data/repository/claims.</small>
+  </label>
+  <div class="full">
+    <button type="submit" class="primary">Run review</button>
+  </div>
+</form>
+{% endblock %}

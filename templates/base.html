@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sentinel{% endblock %} · Claim Review</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <a class="brand" href="/">
+        <span class="mark">S</span>
+        <span>
+          <strong>Sentinel</strong>
+          <small>Claim review</small>
+        </span>
+      </a>
+      <nav>
+        <a href="/" class="{% if request.url.path == '/' %}on{% endif %}">Overview</a>
+        <a href="/claims" class="{% if request.url.path.startswith('/claims') and '/new' not in request.url.path %}on{% endif %}">Claims</a>
+        <a href="/claims/new" class="{% if request.url.path.endswith('/new') %}on{% endif %}">New claim</a>
+        {% if user.role == 'reviewer' %}
+        <a href="/audit" class="{% if request.url.path == '/audit' %}on{% endif %}">Audit log</a>
+        {% endif %}
+        <a href="/security" class="{% if request.url.path == '/security' %}on{% endif %}">Security</a>
+      </nav>
+      <div class="who">
+        <div>
+          <strong>{{ user.display_name }}</strong>
+          <small>{{ user.role }} · localhost only</small>
+        </div>
+        <form method="post" action="/logout">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button type="submit">Sign out</button>
+        </form>
+      </div>
+    </aside>
+    <main class="stage">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

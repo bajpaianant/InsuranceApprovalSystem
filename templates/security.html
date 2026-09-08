@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Security{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Controls</p>
+    <h1>Security posture</h1>
+    <p class="lede">Sentinel is built to keep claim files and member data on this workstation.</p>
+  </div>
+</header>
+
+<section class="stats">
+  <article>
+    <span>Listen address</span>
+    <strong>{{ host }}:{{ port }}</strong>
+  </article>
+  <article>
+    <span>Encrypted claim folders</span>
+    <strong>{{ claim_count }}</strong>
+  </article>
+  <article>
+    <span>Encrypted files</span>
+    <strong>{{ file_count }}</strong>
+  </article>
+  <article>
+    <span>Upload cap</span>
+    <strong>{{ max_upload }} MB</strong>
+  </article>
+</section>
+
+<section class="split">
+  <article class="panel">
+    <h2>Local repository</h2>
+    <dl class="kv">
+      <div><dt>Root</dt><dd><code>{{ repository }}</code></dd></div>
+      <div><dt>Claims</dt><dd><code>{{ claims_dir }}</code></dd></div>
+      <div><dt>Inbox (staging)</dt><dd><code>{{ inbox }}</code></dd></div>
+    </dl>
+    <p class="notes">Each upload is Fernet-encrypted before it hits disk. Filenames on disk are random UUIDs. Original names live only in the local SQLite catalog.</p>
+  </article>
+  <article class="panel">
+    <h2>What is enforced</h2>
+    <ul class="checklist">
+      <li>Bound to localhost — not advertised on the LAN</li>
+      <li>Session cookies: HttpOnly, SameSite=Strict, 8-hour expiry</li>
+      <li>CSRF tokens on every state-changing form</li>
+      <li>Login throttling after repeated failures</li>
+      <li>Passwords stored with PBKDF2-HMAC-SHA256 (210k rounds)</li>
+      <li>Path confinement so uploads cannot escape the repository</li>
+      <li>Member IDs masked in the UI</li>
+      <li>OpenAPI/docs endpoints disabled</li>
+    </ul>
+  </article>
+</section>
+{% endblock %}

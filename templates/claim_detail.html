@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ claim.public_id }}{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ claim.public_id }}</p>
+    <h1>{{ claim.full_name }}</h1>
+    <p class="lede">{{ claim.rationale }}</p>
+  </div>
+  <span class="pill {{ claim.status|lower }} lg">{{ claim.status.replace('_', ' ') }}</span>
+</header>
+
+<section class="split">
+  <article class="panel score-card">
+    <h2>Fraud probability</h2>
+    <p class="giant" data-level="{% if claim.fraud_probability >= 0.55 %}high{% elif claim.fraud_probability >= 0.4 %}mid{% else %}low{% endif %}">
+      {{ pct(claim.fraud_probability) }}
+    </p>
+    <progress class="fraud-bar" max="100" value="{{ (claim.fraud_probability * 100)|round|int }}"></progress>
+    <dl class="kv">
+      <div><dt>Engine recommendation</dt><dd>{{ claim.recommendation.replace('_', ' ') }}</dd></div>
+      <div><dt>Coverage</dt><dd>{% if claim.coverage_ok %}Eligible{% else %}Not eligible{% endif %}</dd></div>
+      <div><dt>Confidence</dt><dd>{{ pct(claim.confidence) }}</dd></div>
+    </dl>
+  </article>
+  <article class="panel">
+    <h2>Claim facts</h2>
+    <dl class="kv">
+      <div><dt>Member</dt><dd>{{ mask_id(claim.member_id) }} · DOB {{ claim.date_of_birth }}</dd></div>
+      <div><dt>Policy</dt><dd>{{ claim.policy_number or 'None' }} · {{ claim.policy_status or 'n/a' }}</dd></div>
+      <div><dt>Provider</dt><dd>{{ claim.provider_name }} · NPI {{ claim.provider_npi }}</dd></div>
+      <div><dt>Facility</dt><dd>{{ claim.facility or '—' }}</dd></div>
+      <div><dt>Date of service</dt><dd>{{ claim.date_of_service }}</dd></div>
+      <div><dt>ICD-10 / CPT</dt><dd>{{ claim.diagnosis_code }} / {{ claim.procedure_code }}</dd></div>
+      <div><dt>Amount</dt><dd>${{ '%.2f'|format(claim.amount) }}</dd></div>
+      <div><dt>Place / emergency</dt><dd>{{ claim.place_of_service.replace('_', ' ') }} · {% if claim.is_emergency %}emergency{% else %}routine{% endif %}</dd></div>
+      <div><dt>Prior auth</dt><dd>{{ claim.preauth_number or 'None' }}</dd></div>
+    </dl>
+    {% if claim.notes %}<p class="notes">{{ claim.notes }}</p>{% endif %}
+  </article>
+</section>
+
+<section class="panel">
+  <h2>Decision factors</h2>
+  <table class="grid factors">
+    <thead>
+      <tr>
+        <th>Factor</th>
+        <th>Category</th>
+        <th>Result</th>
+        <th>Fraud weight</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in factors %}
+      <tr>
+        <td>{{ f.name }}</td>
+        <td>{{ f.category }}</td>
+        <td><span class="pill {% if f.passed %}approved{% else %}{{ f.severity }}{% endif %}">{% if f.passed %}pass{% else %}{{ f.severity }}{% endif %}</span></td>
+        <td>{% if f.score_delta %}{{ '+%.0f'|format(f.score_delta) }}{% else %}0{% endif %}</td>
+        <td>{{ f.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Documents</h2>
+    <span class="muted">Encrypted at rest in the local repository</span>
+  </div>
+  <ul class="docs">
+    {% for d in documents %}
+    <li>
+      <div>
+        <strong>{{ d.original_name }}</strong>
+        <span>{{ d.doc_type.replace('_', ' ') }} · {{ d.size_bytes }} bytes · sha256 {{ d.sha256[:12] }}…</span>
+      </div>
+      <a href="/claims/{{ claim.id }}/documents/{{ d.id }}">Download decrypted</a>
+    </li>
+    {% else %}
+    <li>No files attached.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+{% if user.role == 'reviewer' %}
+<section class="panel">
+  <h2>Reviewer action</h2>
+  {% if claim.reviewer_action %}
+  <p class="notes">Last action: {{ claim.reviewer_action }} {% if claim.reviewer_note %}— {{ claim.reviewer_note }}{% endif %}</p>
+  {% endif %}
+  <form method="post" action="/claims/{{ claim.id }}/decision" class="actions">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Note
+      <textarea name="reviewer_note" rows="2" placeholder="Optional rationale for the file">{{ claim.reviewer_note or '' }}</textarea>
+    </label>
+    <div class="btn-row">
+      <button name="action" value="approve" class="ok">Approve</button>
+      <button name="action" value="info">Request info</button>
+      <button name="action" value="review">Keep in review</button>
+      <button name="action" value="deny" class="bad">Deny</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}
